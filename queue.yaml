@@ -1,0 +1,4 @@
+queue:
+- name: example
+  rate: 5/s
+  bucket_size: 40

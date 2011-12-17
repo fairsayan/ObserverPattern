@@ -20,7 +20,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import pickle
 import logging
 
 class Event(object):
@@ -28,21 +27,23 @@ class Event(object):
 
 class Observable(object):
     def __init__(self):
-        self.serializedObject = []
+        self.subscriberObject = []
+        self.moduleName = []
         self.functionName = []
-    def subscribe(self, functionName, subscriberObject = False):
-      self.serializedObject.append(pickle.dumps(subscriberObject))
+    def subscribe(self, functionName, moduleName = False, subscriberObject = False):
       self.functionName.append(functionName)
-      logging.info('Subscribed')
+      self.moduleName.append(moduleName)
+      self.subscriberObject.append(subscriberObject)
+      logging.info('Subscription done...')
     def fire(self, **attrs):
         e = Event()
         e.obj = self
         for k, v in attrs.iteritems():
             setattr(e, k, v)
         for i in range(len(self.functionName)):
-            logging.info ('Cycle %d', i)
-            if self.serializedObject != False:
-              subscriberObject = pickle.loads(str(self.serializedObject[i]))
-              functionName = self.functionName[i]
-              eval("subscriberObject." + functionName + "(e)")
+            functionName = self.functionName[i]
+            moduleName = self.moduleName[i]
+            subscriberObject = self.subscriberObject[i]
+            if moduleName != False: __import__(moduleName)
+            if subscriberObject != False: eval("subscriberObject." + functionName + "(e)")
             else: eval(functionName + "(e)")

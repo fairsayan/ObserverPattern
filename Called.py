@@ -20,30 +20,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.api import taskqueue
 import logging
+import pickle
 import Observable
+import Caller
 
 class Called(Observable.Observable):
   def run(self):
-    logging.info ('Called is running...')
     taskqueue.add(url='/workers/example', queue_name='example', params={'called':pickle.dumps(self)})
     
   def queue(self):
     logging.info ('Queue processed...')
     self.fire()
 
-class ExampleWorker(webapp.RequestHandler):
-    def post(self):
-      called = pickle.loads(str(self.request.get('called')))
-      called.queue()
-
-CalledCtrl = webapp.WSGIApplication([('/workers/example', ExampleWorker)], debug=True)
-
-def main():
-    run_wsgi_app(CalledCtrl)
-
-if __name__ == "__main__":
-    main()

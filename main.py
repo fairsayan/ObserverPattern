@@ -20,16 +20,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from google.appengine.ext import webapp
+from google.appengine.ext.webapp.util import run_wsgi_app
 import logging
+import pickle
+import Caller
 import Called
 
-class Caller():
-  def resume(self, event):
-    logging.info ('Resumed caller...')
+class ExampleController(webapp.RequestHandler):
+    def get(self):
+      self.response.out.write('Check the logs to see what happened...')
+      caller = Caller.Caller()
 
-  def __init__(self):
-    called = Called.Called()
-    called.subscribe('resume', __name__, self)
-    logging.info ('Running called object method...')
-    called.run()
+class ExampleWorker(webapp.RequestHandler):
+    def post(self):
+      called = pickle.loads(str(self.request.get('called')))
+      called.queue()
 
+ExampleCtrl = webapp.WSGIApplication([('/', ExampleController), ('/workers/example', ExampleWorker)], debug=True)
+
+def main():
+    run_wsgi_app(ExampleCtrl)
+
+if __name__ == "__main__":
+    main()
